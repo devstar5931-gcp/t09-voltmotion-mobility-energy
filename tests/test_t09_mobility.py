@@ -116,3 +116,42 @@ def test_t09_route_simulation_and_sister_table_t10_a2a() -> None:
     assert a2a_res["status"] == "SUCCESS"
     assert a2a_res["a2a_handshake"]["status"] == "DELIVERED_TO_T10"
     assert a2a_res["a2a_handshake"]["protected_ltv_eur"] > 0
+
+
+def test_t09_v2_pwa_and_generative_ui() -> None:
+    from fastapi.testclient import TestClient
+    from app.web_app import app, _compose_generative_ui
+
+    client = TestClient(app)
+
+    # Verify PWA manifest and Service Worker endpoints
+    manifest_resp = client.get("/manifest.webmanifest")
+    assert manifest_resp.status_code == 200
+    manifest_data = manifest_resp.json()
+    assert manifest_data["short_name"] == "VoltMotion"
+    assert manifest_data["display"] == "standalone"
+
+    sw_resp = client.get("/sw.js")
+    assert sw_resp.status_code == 200
+    assert sw_resp.headers.get("service-worker-allowed") == "/"
+
+    # Verify dashboard includes initial_generative_ui for Manager Javier
+    dash_resp = client.get("/api/dashboard")
+    assert dash_resp.status_code == 200
+    dash_data = dash_resp.json()
+    assert "initial_generative_ui" in dash_data
+    gen_ui = dash_data["initial_generative_ui"]
+    assert gen_ui["category"] == "EXECUTIVE_OVERVIEW"
+    assert len(gen_ui["widgets"]) >= 2
+
+    # Verify Generative UI composer responds to voice/text problem queries
+    voice_solution = _compose_generative_ui(
+        query="Javier: Como bajamos el sobrecoste de tarifa punta y protegemos el transformador?",
+        reply_text="Propongo desplazar la carga al valle WIN-002 y limitar a 480 kW.",
+        tool_calls=[],
+        dashboard=dash_data,
+    )
+    assert voice_solution["category"] == "TRANSFORMER_SAFETY"
+    assert len(voice_solution["widgets"]) >= 1
+    assert len(voice_solution["kpis_before_after"]) == 3
+
