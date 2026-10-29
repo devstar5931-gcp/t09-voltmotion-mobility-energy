@@ -1,0 +1,43 @@
+name: Table 9 VoltMotion Agentic CI/CD
+
+on:
+  push:
+    branches: [ main, master, "**" ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  SEED_PACK: t09
+  GEMINI_MODEL: gemini-3.8-flash
+  GOOGLE_CLOUD_LOCATION: global
+  AGENT_RUNTIME_LOCATION: europe-west1
+  BQ_LOCATION: EU
+  SEED_OFFLINE_MODE: "1"
+
+jobs:
+  validate-and-test:
+    name: Pack Validation, Unit & Guardrail Tests, and Eval Schema Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv and Python 3.12
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+
+      - name: Set up virtual environment & dependencies
+        run: |
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv/bin/python -r pyproject.toml
+
+      - name: Validate all 10 Seed Packs & Table 9 contract
+        run: .venv/bin/python seed_packs/check_packs.py
+
+      - name: Run unit, simulation, A2A, and WIN-019 security guardrail tests
+        run: .venv/bin/python -m pytest -q
+
+      - name: Validate ADK Golden Evaluation Suite (t09_mobility_energy)
+        run: SEED_PACK=t09 .venv/bin/python -m eval.run_eval --pack t09 --validate-only

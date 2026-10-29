@@ -19,11 +19,14 @@
 - `query_fleet_charging_needs` (BigQuery read tool in `tools.py`)
 - `get_grid_tariff_forecast` (BigQuery read tool in `tools.py`)
 - `inspect_depot_charger_headroom` (BigQuery read tool in `tools.py`)
+- `optimize_depot_energy_arbitrage` (Smart charging + V2G arbitrage & CO2 optimizer in `tools.py`)
 
 ### Mock Action APIs (`mcp_server.py` & `ACTION_TOOLS` in `tools.py`)
 - `schedule_smart_charging_plan` (FastMCP stdio tool in `mcp_server.py` & `ACTION_TOOLS` in `tools.py`)
 - `authorize_v2g_grid_discharge` (FastMCP stdio tool in `mcp_server.py` & `ACTION_TOOLS` in `tools.py`)
 - `throttle_depot_transformer_load` (FastMCP stdio tool in `mcp_server.py` & `ACTION_TOOLS` in `tools.py`)
+- `simulate_fleet_route_change` (FastMCP stdio tool in `mcp_server.py` & `ACTION_TOOLS` in `tools.py`)
+- `notify_sister_table_t10_a2a` (FastMCP stdio tool in `mcp_server.py` & `ACTION_TOOLS` in `tools.py`)
 
 ## Minimum Playable Scope (~3.5 Hours Build Time)
 Build an ADK agent connected to `seed_t09` and the `t09_mobility_energy` MCP server that: (1) finds plugged-in EVs below a state-of-charge threshold before their next route, (2) reads the depot's tariff windows (price, carbon intensity, V2G bonus) and charger/transformer headroom, and (3) calls `schedule_smart_charging_plan`, `authorize_v2g_grid_discharge`, or `throttle_depot_transformer_load`.
